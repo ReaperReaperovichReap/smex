@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Распознавание Смешариков</title>
+    <style>
+        body { font-family: Arial; max-width: 600px; margin: 50px auto; text-align: center; }
+        input[type="file"] { margin: 20px 0; }
+        .result { margin-top: 20px; font-size: 1.2em; color: #333; }
+    </style>
+</head>
+<body>
+    <h1>🧸 Распознай персонажа Смешариков</h1>
+    <p>Загрузи картинку с персонажем, и я скажу, кто это.</p>
+    <form id="upload-form" enctype="multipart/form-data">
+        <input type="file" name="file" accept="image/*" required>
+        <button type="submit">Узнать</button>
+    </form>
+    <div id="result" class="result"></div>
+
+    <script>
+        document.getElementById('upload-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '⏳ Обработка...';
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.error) {
+                    resultDiv.innerHTML = '❌ Ошибка: ' + data.error;
+                    return;
+                }
+                let html = '<h3>🎯 Результат:</h3><ul>';
+                for (const [name, conf] of Object.entries(data)) {
+                    html += `<li><strong>${name}</strong> — ${conf.toFixed(2)}%</li>`;
+                }
+                html += '</ul>';
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                resultDiv.innerHTML = '❌ Ошибка соединения с сервером';
+            }
+        });
+    </script>
+</body>
+</html>
